@@ -1,10 +1,11 @@
 /* Trip Pins service worker v2: offline app shell + cached map tiles.
    App files are network-first (so updates arrive automatically); tiles are cache-first. */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL = 'tripins-shell-' + VERSION;
 const TILES = 'tripins-tiles-v1';
 const SHELL_FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png',
-  'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js', 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'];
+  'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js', 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
+  'https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js', 'https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css'];
 const TILE_LIMIT = 3000;
 
 self.addEventListener('install', e => {

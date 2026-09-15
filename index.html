@@ -13,6 +13,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <style>
 :root{
   --bg:#ffffff; --fg:#111827; --muted:#6b7280; --card:#ffffff; --border:#e5e7eb;
@@ -58,6 +59,9 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:16px/1.
 .seg3{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-block-start:4px}
 .seg3 button{flex:1;border:0;background:transparent;color:var(--muted);padding:10px;font-size:15px;font-weight:600;cursor:pointer}
 .seg3 button.on{background:var(--accent);color:var(--accent-fg)}
+/* clusters: neutral blue-outlined circle with count */
+.cl{width:44px;height:44px;border-radius:50%;background:#fff;border:3px solid #2563eb;color:#1e3a8a;display:grid;place-items:center;font-weight:800;font-size:15px;box-shadow:0 3px 8px rgba(0,0,0,.3)}
+.cl.big{width:52px;height:52px;font-size:17px}
 /* bottom drawer */
 .drawer{position:fixed;inset-inline:0;bottom:0;z-index:15;background:var(--card);color:var(--fg);border-radius:20px 20px 0 0;box-shadow:var(--sheet-shadow);height:50vh;display:flex;flex-direction:column;transform:translateY(calc(100% - 54px));transition:transform .25s ease;padding-block-end:var(--safe-b)}
 body.dopen .drawer{transform:none}
@@ -66,9 +70,13 @@ body.dopen .drawer{transform:none}
 .dhandle .row2{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:16px}
 .dhandle .row2 span:last-child{color:var(--muted);font-size:20px;transition:transform .25s}
 body.dopen .dhandle .row2 span:last-child{transform:rotate(180deg)}
-.dseg{display:flex;gap:6px;padding:4px 18px 8px}
-.dseg button{flex:1;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:10px;padding:7px;font-size:14px;font-weight:600;cursor:pointer}
+.dseg{display:flex;gap:6px;padding:4px 18px 8px;align-items:center;height:48px}
+.dseg button{flex:1;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:10px;padding:7px;font-size:14px;font-weight:600;cursor:pointer;height:36px}
 .dseg button.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.dseg button.rnd{flex:none;width:36px;border-radius:50%;padding:0;font-size:16px;display:grid;place-items:center}
+.dseg input{flex:1;height:36px;border:1px solid var(--border);border-radius:10px;padding:0 12px;font-size:16px;background:var(--bg);color:var(--fg);min-inline-size:0}
+.dseg.searching .flt{display:none}
+.dseg:not(.searching) .srch{display:none}
 .dlist{flex:1;overflow:auto;border-block-start:1px solid var(--border)}
 .dlist .it{display:flex;align-items:center;gap:12px;padding:10px 18px;border-block-end:1px solid var(--border);cursor:pointer}
 .dlist .it.sel{background:color-mix(in srgb,var(--accent) 10%,var(--card))}
@@ -164,7 +172,13 @@ progress{width:100%}
 
 <div class="drawer" id="drawer">
   <div class="dhandle" id="dHandle"><div class="grab"></div><div class="row2"><span id="dTitle">Places</span><span>▴</span></div></div>
-  <div class="dseg" id="dSeg"><button data-f="all" class="on">All</button><button data-f="todo">To visit</button><button data-f="done">Visited</button></div>
+  <div class="dseg" id="dSeg">
+    <button class="flt" data-f="all">All</button><button class="flt" data-f="todo">To visit</button><button class="flt" data-f="done">Visited</button>
+    <button class="flt rnd" id="dSort" title="Sort">A‑Z</button>
+    <button class="flt rnd" id="dSearchBtn" title="Search">🔍</button>
+    <button class="srch rnd" id="dBack" title="Back">‹</button>
+    <input class="srch" id="dSearch" type="search" placeholder="Search places…" autocomplete="off">
+  </div>
   <div class="dlist" id="dList"></div>
 </div>
 
@@ -320,11 +334,11 @@ progress{width:100%}
 <!-- Help -->
 <div class="sheet" id="helpSheet">
   <div class="grab"></div>
-  <h2>Help <span class="meta" style="font-size:14px">Trip Pins v2</span></h2>
+  <h2>Help <span class="meta" style="font-size:14px">Trip Pins v3</span></h2>
   <h3>Install on iPhone</h3>
   <p>Open this page in Safari → Share → <b>Add to Home Screen</b>. Launch it from the icon for full‑screen mode and notifications.</p>
   <h3>Pins</h3>
-  <p><span style="color:var(--visit);font-weight:700">Red ring</span> = place to visit. <span style="color:var(--visited);font-weight:700">Green ring</span> = visited. Give each place a type (castle, beach, food, nature, museum, pub, stay) and the icon changes; turn this off in Settings for plain pins. Long‑press the map or use the search box to add a place. Swipe up the <b>Places</b> bar for a scrollable list — tap a row to fly to it.</p>
+  <p><span style="color:var(--visit);font-weight:700">Red ring</span> = place to visit. <span style="color:var(--visited);font-weight:700">Green ring</span> = visited. Give each place a type (castle, beach, food, nature, museum, pub, stay) and the icon changes; turn this off in Settings for plain pins. Long‑press the map or use the search box to add a place. Swipe up the <b>Places</b> bar for a scrollable list — tap a row to fly to it; use <b>A‑Z / 📍</b> to sort alphabetically or by distance from you, and 🔍 to search by name, note or type. When zoomed out, nearby pins merge into a blue‑outlined circle showing how many are there — tap it to zoom in.</p>
   <h3>Import your Google Maps places</h3>
   <ol>
     <li>Go to <b>takeout.google.com</b> → Deselect all → tick <b>Maps (your places)</b> and <b>Saved</b> → Next → Create export.</li>
@@ -355,13 +369,14 @@ progress{width:100%}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 (function(){
 'use strict';
 /* ---------- storage ---------- */
 const KEY='tripins.places.v1', SKEY='tripins.settings.v1';
 let places=load(KEY,[]);
-let settings=Object.assign({watch:false,radius:2000,eta:true,sound:true,notify:false,planArea:50,planRadius:2000,planMax:15,view:null,typeIcons:true,backupEvery:10,changes:0,lastBackup:null,snoozeUntil:0,drawerOpen:false,drawerFilter:'all'},load(SKEY,{}));
+let settings=Object.assign({watch:false,radius:2000,eta:true,sound:true,notify:false,planArea:50,planRadius:2000,planMax:15,view:null,typeIcons:true,backupEvery:10,changes:0,lastBackup:null,snoozeUntil:0,drawerOpen:false,drawerFilter:'all',drawerSort:'az'},load(SKEY,{}));
 function load(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
 function save(){localStorage.setItem(KEY,JSON.stringify(places))}
 function saveDirty(n){save();settings.changes=(settings.changes||0)+(n||1);saveSettings();setTimeout(checkNudge,400)}
@@ -379,19 +394,21 @@ const map=L.map('map',{zoomControl:false,attributionControl:true}).setView([star
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
 L.control.zoom({position:'topright'}).addTo(map);
 map.on('moveend',()=>{const c=map.getCenter();settings.view={lat:c.lat,lng:c.lng,z:map.getZoom()};saveSettings()});
-const layer=L.layerGroup().addTo(map);
+const layer=L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:60,spiderfyOnMaxZoom:true,disableClusteringAtZoom:16,zoomToBoundsOnClick:true,
+  iconCreateFunction:c=>{const n=c.getChildCount();return L.divIcon({className:'',html:`<div class="cl ${n>=50?'big':''}">${n}</div>`,iconSize:n>=50?[52,52]:[44,44]})}}).addTo(map);
 let filter='all', markers={}, meMarker=null, meCircle=null;
 
 function pinIcon(p){
   return L.divIcon({className:'',html:`<div class="mk ${p.visited?'done':'todo'}"><div class="tail"></div><div class="disc">${glyph(p)}</div></div>`,iconSize:[40,48],iconAnchor:[20,47],popupAnchor:[0,-44]});
 }
 function render(){
-  layer.clearLayers();markers={};
+  layer.clearLayers();markers={};const ms=[];
   places.forEach(p=>{
     if(filter==='todo'&&p.visited)return; if(filter==='done'&&!p.visited)return;
-    const m=L.marker([p.lat,p.lng],{icon:pinIcon(p),title:p.name}).addTo(layer);
-    m.on('click',()=>openCard(p.id)); markers[p.id]=m;
+    const m=L.marker([p.lat,p.lng],{icon:pinIcon(p),title:p.name});
+    m.on('click',()=>openCard(p.id)); markers[p.id]=m; ms.push(m);
   });
+  layer.addLayers(ms);
   $('hint').style.display=places.length?'none':'block';
   paintDrawer();
 }
@@ -553,7 +570,7 @@ $('listFilter').oninput=paintList;
 function download(name,text,type){const blob=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
 const stamp=()=>new Date().toISOString().slice(0,10);
 function backupJson(){return JSON.stringify({app:'Trip Pins',version:1,exported:new Date().toISOString(),places},null,1)}
-function csvOut(){const q=s=>`"${String(s??'').replace(/"/g,'""')}"`;return ['Name,Latitude,Longitude,Rating,Visited,Date visited,Notes,Source'].concat(places.map(p=>[q(p.name),p.lat,p.lng,p.rating||'',p.visited?'yes':'no',p.visitedDate||'',q(p.notes),q(p.source)].join(','))).join('\r\n')}
+function csvOut(){const q=s=>`"${String(s??'').replace(/"/g,'""')}"`;return ['Name,Latitude,Longitude,Type,Rating,Visited,Date visited,Pet friendly,Notes,Source'].concat(places.map(p=>[q(p.name),p.lat,p.lng,q((TYPES[p.type]||TYPES.pin).l),p.rating||'',p.visited?'yes':'no',p.visitedDate||'',p.pet==='yes'?'yes':p.pet==='no'?'no':'',q(p.notes),q(p.source)].join(','))).join('\r\n')}
 function markBackedUp(){settings.lastBackup=new Date().toISOString();settings.changes=0;settings.snoozeUntil=0;saveSettings()}
 function doBackup(){download(`trip-pins-backup-${stamp()}.json`,backupJson(),'application/json');markBackedUp();toast('Backup saved to your Downloads / Files')}
 $('expJson').onclick=doBackup;
@@ -653,20 +670,35 @@ function setDrawer(open){settings.drawerOpen=open;saveSettings();document.body.c
 $('dHandle').onclick=()=>setDrawer(!settings.drawerOpen);
 let ty0=null;$('dHandle').addEventListener('touchstart',e=>{ty0=e.touches[0].clientY},{passive:true});
 $('dHandle').addEventListener('touchend',e=>{if(ty0==null)return;const dy=e.changedTouches[0].clientY-ty0;ty0=null;if(dy<-30)setDrawer(true);else if(dy>30)setDrawer(false)});
-$('dSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.drawerFilter=b.dataset.f;saveSettings();paintDrawer()});
+$('dSeg').addEventListener('click',e=>{const b=e.target.closest('button.flt[data-f]');if(!b)return;settings.drawerFilter=b.dataset.f;saveSettings();paintDrawer()});
+$('dSearchBtn').onclick=()=>{$('dSeg').classList.add('searching');setDrawer(true);setTimeout(()=>$('dSearch').focus(),50)};
+$('dBack').onclick=()=>{$('dSearch').value='';$('dSeg').classList.remove('searching');paintDrawer()};
+$('dSearch').oninput=paintDrawer;
+$('dSort').onclick=()=>{
+  if(settings.drawerSort==='az'){settings.drawerSort='near';saveSettings();
+    if(!lastPos){toast('Finding your location…');navigator.geolocation.getCurrentPosition(pos=>{updateMe(pos);paintDrawer()},e=>{toast('Location unavailable — sorted A‑Z');settings.drawerSort='az';saveSettings();paintDrawer()},{enableHighAccuracy:true,timeout:10000})}
+  }else{settings.drawerSort='az';saveSettings()}
+  paintDrawer();
+};
 function paintDrawer(){
-  [...$('dSeg').children].forEach(b=>b.classList.toggle('on',b.dataset.f===(settings.drawerFilter||'all')));
-  const f=settings.drawerFilter||'all';
-  const arr=places.filter(p=>f==='all'||(f==='done'?p.visited:!p.visited)).sort((a,b)=>a.name.localeCompare(b.name));
+  $('dSeg').querySelectorAll('button.flt[data-f]').forEach(b=>b.classList.toggle('on',b.dataset.f===(settings.drawerFilter||'all')));
+  const near=settings.drawerSort==='near'&&lastPos;
+  $('dSort').textContent=settings.drawerSort==='near'?'📍':'A‑Z';$('dSort').classList.toggle('on',settings.drawerSort==='near');$('dSort').title=near?'Sorted by distance from you':'Sorted A‑Z';
+  const f=settings.drawerFilter||'all', q=$('dSearch').value.trim().toLowerCase();
+  let arr=places.filter(p=>(f==='all'||(f==='done'?p.visited:!p.visited))&&(!q||p.name.toLowerCase().includes(q)||(p.notes||'').toLowerCase().includes(q)||((TYPES[p.type]||{}).l||'').toLowerCase().includes(q)));
+  if(near){const la=lastPos.coords.latitude,lo=lastPos.coords.longitude;arr=arr.map(p=>({p,d:dist(la,lo,p.lat,p.lng)})).sort((a,b)=>a.d-b.d)}
+  else arr=arr.sort((a,b)=>a.name.localeCompare(b.name)).map(p=>({p,d:null}));
   const v=places.filter(p=>p.visited).length;
-  $('dTitle').textContent=`Places · ${arr.length}${f==='all'?` (${v} visited, ${places.length-v} to visit)`:''}`;
+  $('dTitle').textContent=`Places · ${arr.length}${f==='all'&&!q?` (${v} visited, ${places.length-v} to visit)`:''}`;
   const body=$('dList');body.innerHTML='';
-  if(!arr.length){body.innerHTML='<div class="it"><span class="meta">Nothing here yet — long‑press the map or search to add a place.</span></div>';return}
-  arr.forEach(p=>{const d=document.createElement('div');d.className='it'+(p.id===dSel?' sel':'');
-    d.innerHTML=`<span class="ring ${p.visited?'done':'todo'}">${glyph(p)}</span><span class="nm"><b>${esc(p.name)}</b><small>${p.rating?'★'.repeat(p.rating)+' · ':''}${p.visited?'Visited':'To visit'}${p.pet==='yes'?' · 🐾':p.pet==='no'?' · 🚫':''}</small></span><span class="go">›</span>`;
-    d.onclick=()=>{dSel=p.id;map.flyTo([p.lat,p.lng],Math.max(map.getZoom(),14),{duration:.6});[...body.children].forEach(x=>x.classList.remove('sel'));d.classList.add('sel')};
-    body.appendChild(d)});
+  if(!arr.length){body.innerHTML=`<div class="it"><span class="meta">${q?'No places match your search.':'Nothing here yet — long‑press the map or search to add a place.'}</span></div>`;return}
+  arr.forEach(({p,d})=>{const dd=document.createElement('div');dd.className='it'+(p.id===dSel?' sel':'');const el=dd;
+    el.innerHTML=`<span class="ring ${p.visited?'done':'todo'}">${glyph(p)}</span><span class="nm"><b>${esc(p.name)}</b><small>${d!=null?fmtKm(Math.round(d/100)*100)+' · ':''}${p.rating?'★'.repeat(p.rating)+' · ':''}${p.visited?'Visited':'To visit'}${p.pet==='yes'?' · 🐾':p.pet==='no'?' · 🚫':''}</small></span><span class="go">›</span>`;
+    el.onclick=()=>{dSel=p.id;map.flyTo([p.lat,p.lng],Math.max(map.getZoom(),16),{duration:.6});[...body.children].forEach(x=>x.classList.remove('sel'));el.classList.add('sel')};
+    body.appendChild(el)});
 }
+// refresh distances when the location updates while sorted by nearest
+const _updateMe=updateMe;updateMe=function(pos){_updateMe(pos);if(settings.drawerSort==='near'&&settings.drawerOpen&&!openSheet)paintDrawer()};
 document.body.classList.toggle('dopen',!!settings.drawerOpen);
 render();
 
