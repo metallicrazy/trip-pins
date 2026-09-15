@@ -320,7 +320,7 @@ progress{width:100%}
 <!-- Help -->
 <div class="sheet" id="helpSheet">
   <div class="grab"></div>
-  <h2>Help</h2>
+  <h2>Help <span class="meta" style="font-size:14px">Trip Pins v2</span></h2>
   <h3>Install on iPhone</h3>
   <p>Open this page in Safari → Share → <b>Add to Home Screen</b>. Launch it from the icon for full‑screen mode and notifications.</p>
   <h3>Pins</h3>
@@ -349,6 +349,8 @@ progress{width:100%}
   <p class="meta">If your iOS version's Add New Reminder action doesn't accept a radius, open the Reminders app once after creating them and drag the circle wider on each — or use <b>Copy list</b> and add them by hand.</p>
   <h3>Backups</h3>
   <p>Data lives only on this phone. Use <b>Export / back up</b> regularly.</p>
+  <h3>Updates</h3>
+  <p>When new files are uploaded to your site, the app fetches them automatically the next time it's opened online and reloads itself. Your places are unaffected.</p>
   <div class="row"><button class="btn" id="helpClose">Close</button></div>
 </div>
 
@@ -699,7 +701,11 @@ $('planClear').onclick=()=>runShortcut('Trip Pins Clear','clear');
 $('planCopy').onclick=async()=>{const t=planCandidates().slice(0,settings.planMax).map(x=>`${x.p.name} — ${x.p.lat.toFixed(5)}, ${x.p.lng.toFixed(5)} (alert ${fmtKm(settings.planRadius)})`).join('\n');try{await navigator.clipboard.writeText(t);toast('Copied')}catch(e){prompt('Copy this list:',t)}};
 
 /* ---------- service worker ---------- */
-if('serviceWorker'in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+if('serviceWorker'in navigator&&location.protocol==='https:'){
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{reg.update().catch(()=>{});setInterval(()=>reg.update().catch(()=>{}),60*60*1000)}).catch(()=>{});
+  navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='updated'){toast('Trip Pins updated — reloading…');setTimeout(()=>location.reload(),1200)}});
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!window._reloaded){window._reloaded=true;setTimeout(()=>location.reload(),800)}});
+}
 })();
 </script>
 </body>
