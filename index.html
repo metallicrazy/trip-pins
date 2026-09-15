@@ -41,10 +41,45 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:16px/1.
 .results{position:fixed;top:calc(var(--safe-t) + 58px);inset-inline:10px;z-index:25;background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.2);max-block-size:40vh;overflow:auto;display:none}
 .results div{padding:12px 14px;border-block-end:1px solid var(--border);cursor:pointer;font-size:15px}
 .results div:last-child{border:0}
-/* markers */
-.pin{width:34px;height:44px;position:relative;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35))}
-.pin svg{width:34px;height:44px;display:block}
-.pin .lbl{position:absolute;top:6px;inset-inline:0;text-align:center;color:#fff;font-weight:800;font-size:15px;line-height:20px}
+/* markers: white disc in a coloured ring (red = to visit, green = visited) with a small tail */
+.mk{position:relative;width:40px;height:48px;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35))}
+.mk .disc{position:absolute;top:0;inset-inline-start:0;width:40px;height:40px;border-radius:50%;background:#fff;border:4px solid var(--ring);display:grid;place-items:center;font-size:20px;line-height:1}
+.mk .tail{position:absolute;top:33px;inset-inline-start:13px;width:14px;height:14px;background:var(--ring);transform:rotate(45deg);border-radius:2px}
+.mk.done{--ring:#1f9d55}.mk.todo{--ring:#e0443e}
+.mk .disc svg{width:20px;height:20px;display:block}
+.ring{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#fff;border:3px solid var(--ring);font-size:17px;line-height:1;flex:none}
+.ring.done{--ring:#1f9d55}.ring.todo{--ring:#e0443e}
+.ring svg{width:16px;height:16px}
+.typepick{display:flex;gap:8px;overflow-x:auto;padding:6px 0 4px;margin-block-start:4px;-webkit-overflow-scrolling:touch}
+.typepick button{flex:none;border:2px solid var(--border);background:var(--bg);color:var(--fg);border-radius:12px;padding:8px 10px;font-size:13px;display:grid;place-items:center;gap:4px;min-inline-size:72px;cursor:pointer}
+.typepick button span{font-size:24px;display:grid;place-items:center;height:28px}
+.typepick svg{width:24px;height:24px}
+.typepick button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--bg))}
+.seg3{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-block-start:4px}
+.seg3 button{flex:1;border:0;background:transparent;color:var(--muted);padding:10px;font-size:15px;font-weight:600;cursor:pointer}
+.seg3 button.on{background:var(--accent);color:var(--accent-fg)}
+/* bottom drawer */
+.drawer{position:fixed;inset-inline:0;bottom:0;z-index:15;background:var(--card);color:var(--fg);border-radius:20px 20px 0 0;box-shadow:var(--sheet-shadow);height:50vh;display:flex;flex-direction:column;transform:translateY(calc(100% - 54px));transition:transform .25s ease;padding-block-end:var(--safe-b)}
+body.dopen .drawer{transform:none}
+.dhandle{padding:8px 18px 6px;cursor:pointer;user-select:none}
+.dhandle .grab{margin-block-end:6px}
+.dhandle .row2{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:16px}
+.dhandle .row2 span:last-child{color:var(--muted);font-size:20px;transition:transform .25s}
+body.dopen .dhandle .row2 span:last-child{transform:rotate(180deg)}
+.dseg{display:flex;gap:6px;padding:4px 18px 8px}
+.dseg button{flex:1;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:10px;padding:7px;font-size:14px;font-weight:600;cursor:pointer}
+.dseg button.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.dlist{flex:1;overflow:auto;border-block-start:1px solid var(--border)}
+.dlist .it{display:flex;align-items:center;gap:12px;padding:10px 18px;border-block-end:1px solid var(--border);cursor:pointer}
+.dlist .it.sel{background:color-mix(in srgb,var(--accent) 10%,var(--card))}
+.dlist .nm{flex:1;min-inline-size:0}
+.dlist .nm b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dlist .nm small{color:var(--muted)}
+.dlist .go{color:var(--muted);font-size:13px;flex:none}
+body.dopen .fabs{bottom:calc(50vh + 14px)}
+.fabs{bottom:calc(var(--safe-b) + 68px)}
+.hint{bottom:calc(var(--safe-b) + 62px)}
+body.dopen .hint,body.dopen .leaflet-control-attribution{display:none}
 .me{width:18px;height:18px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 6px rgba(37,99,235,.25)}
 /* sheets */
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:40;display:none}
@@ -127,6 +162,12 @@ progress{width:100%}
 </div>
 <div class="hint" id="hint">Long‑press the map to add a place</div>
 
+<div class="drawer" id="drawer">
+  <div class="dhandle" id="dHandle"><div class="grab"></div><div class="row2"><span id="dTitle">Places</span><span>▴</span></div></div>
+  <div class="dseg" id="dSeg"><button data-f="all" class="on">All</button><button data-f="todo">To visit</button><button data-f="done">Visited</button></div>
+  <div class="dlist" id="dList"></div>
+</div>
+
 <div class="banner" id="banner"></div>
 <div class="toast" id="toast"></div>
 
@@ -135,10 +176,11 @@ progress{width:100%}
 <!-- Pin card -->
 <div class="sheet" id="cardSheet">
   <div class="grab"></div>
-  <h2 id="cName"></h2>
+  <div style="display:flex;align-items:center;gap:10px"><span id="cIcon"></span><h2 id="cName" style="margin:0"></h2></div>
   <div class="stars" id="cStars"></div>
   <div class="quote" id="cNote"></div>
   <div class="status" id="cStatus"></div>
+  <div id="cPet" style="font-weight:600;margin-block-start:2px"></div>
   <div class="meta" id="cMeta"></div>
   <div class="row">
     <button class="btn" id="cEdit">✏️ Edit</button>
@@ -154,16 +196,32 @@ progress{width:100%}
   </div>
 </div>
 
+<!-- Backup nudge -->
+<div class="sheet" id="backupSheet">
+  <div class="grab"></div>
+  <h2>Time to back up</h2>
+  <p id="bkText"></p>
+  <p class="meta">Your places live only on this phone. A backup is one small file you can re‑import any time.</p>
+  <div class="row"><button class="btn primary" id="bkNow">💾 Back up now</button><button class="btn" id="bkLater">Later</button></div>
+</div>
+
 <!-- Edit -->
 <div class="sheet" id="editSheet">
   <div class="grab"></div>
   <h2 id="eTitle">Edit place</h2>
   <label class="f">Name<input class="t" id="eName" placeholder="e.g. Dunnottar Castle"></label>
+  <label class="f">Type</label>
+  <div class="typepick" id="eType"></div>
   <label class="f">Rating</label>
   <div class="starpick" id="eStars"><span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span></div>
   <label class="f">Notes<textarea class="t" id="eNote" placeholder="Beautiful castle with amazing views."></textarea></label>
+  <label class="f">Pet friendly</label>
+  <div class="seg3" id="ePet"><button data-v="">Unknown</button><button data-v="yes">🐾 Yes</button><button data-v="no">🚫 No</button></div>
   <div class="switch"><span>Visited</span><input type="checkbox" id="eVisited"></div>
-  <label class="f" id="eDateWrap">Date visited<input class="t" type="date" id="eDate"></label>
+  <div id="eDateWrap">
+    <div class="switch" style="border:0;padding-block-end:4px"><span class="meta">I don't remember the date</span><input type="checkbox" id="eNoDate"></div>
+    <label class="f" id="eDateLbl" style="margin-block-start:0">Date visited<input class="t" type="date" id="eDate"></label>
+  </div>
   <details style="margin-block-start:12px"><summary class="meta">Coordinates</summary>
     <label class="f">Latitude<input class="t" id="eLat" inputmode="decimal"></label>
     <label class="f">Longitude<input class="t" id="eLng" inputmode="decimal"></label>
@@ -246,6 +304,13 @@ progress{width:100%}
   <div class="switch"><span>Also alert when about 5 minutes away (based on my speed)</span><input type="checkbox" id="sEta" checked></div>
   <div class="switch"><span>Play a sound</span><input type="checkbox" id="sSound" checked></div>
   <div class="switch"><span>Show system notifications (installed app only)</span><input type="checkbox" id="sNotify"></div>
+  <h3>Map pins</h3>
+  <div class="switch"><span>Show location‑type icons (castle, beach, food…) instead of plain pins</span><input type="checkbox" id="sTypes"></div>
+  <h3>Backups</h3>
+  <label class="f">Remind me to back up after this many changes</label>
+  <div class="slider"><input type="range" id="sBackupEvery" min="5" max="100" step="5" value="10"><output id="sBackupEveryOut">10</output></div>
+  <div class="meta" id="sBackupInfo"></div>
+  <div class="row"><button class="btn" id="sBackupNow">💾 Back up now</button></div>
   <h3>Data</h3>
   <div class="meta" id="sStats"></div>
   <div class="row"><button class="btn danger" id="sWipe">Delete all places</button></div>
@@ -259,7 +324,7 @@ progress{width:100%}
   <h3>Install on iPhone</h3>
   <p>Open this page in Safari → Share → <b>Add to Home Screen</b>. Launch it from the icon for full‑screen mode and notifications.</p>
   <h3>Pins</h3>
-  <p><span style="color:var(--visit);font-weight:700">Red pin</span> = place to visit. <span style="color:var(--visited);font-weight:700">Green pin ✓</span> = visited. Long‑press the map or use the search box to add a place.</p>
+  <p><span style="color:var(--visit);font-weight:700">Red ring</span> = place to visit. <span style="color:var(--visited);font-weight:700">Green ring</span> = visited. Give each place a type (castle, beach, food, nature, museum, pub, stay) and the icon changes; turn this off in Settings for plain pins. Long‑press the map or use the search box to add a place. Swipe up the <b>Places</b> bar for a scrollable list — tap a row to fly to it.</p>
   <h3>Import your Google Maps places</h3>
   <ol>
     <li>Go to <b>takeout.google.com</b> → Deselect all → tick <b>Maps (your places)</b> and <b>Saved</b> → Next → Create export.</li>
@@ -294,9 +359,13 @@ progress{width:100%}
 /* ---------- storage ---------- */
 const KEY='tripins.places.v1', SKEY='tripins.settings.v1';
 let places=load(KEY,[]);
-let settings=Object.assign({watch:false,radius:2000,eta:true,sound:true,notify:false,planArea:50,planRadius:2000,planMax:15,view:null},load(SKEY,{}));
+let settings=Object.assign({watch:false,radius:2000,eta:true,sound:true,notify:false,planArea:50,planRadius:2000,planMax:15,view:null,typeIcons:true,backupEvery:10,changes:0,lastBackup:null,snoozeUntil:0,drawerOpen:false,drawerFilter:'all'},load(SKEY,{}));
 function load(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
 function save(){localStorage.setItem(KEY,JSON.stringify(places))}
+function saveDirty(n){save();settings.changes=(settings.changes||0)+(n||1);saveSettings();setTimeout(checkNudge,400)}
+const TYPES={pin:{e:'',l:'Generic pin'},castle:{e:'🏰',l:'Castle'},beach:{e:'🏖️',l:'Beach'},food:{e:'🍽️',l:'Food'},nature:{e:'🏞️',l:'Nature / view'},museum:{e:'🏛️',l:'Museum / historic'},pub:{e:'🍺',l:'Pub / bar'},stay:{e:'🛏️',l:'Stay'}};
+const PIN_SVG='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.1 2 5 5.1 5 9c0 5 7 13 7 13s7-8 7-13c0-3.9-3.1-7-7-7z" fill="#64748b"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg>';
+function glyph(p){const t=(settings.typeIcons&&p.type&&TYPES[p.type]&&p.type!=='pin')?TYPES[p.type].e:'';return t||PIN_SVG}
 function saveSettings(){localStorage.setItem(SKEY,JSON.stringify(settings))}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const $=id=>document.getElementById(id);
@@ -311,22 +380,19 @@ map.on('moveend',()=>{const c=map.getCenter();settings.view={lat:c.lat,lng:c.lng
 const layer=L.layerGroup().addTo(map);
 let filter='all', markers={}, meMarker=null, meCircle=null;
 
-function pinIcon(visited){
-  const col=visited?'#1f9d55':'#e0443e';
-  const svg=`<svg viewBox="0 0 34 44" xmlns="http://www.w3.org/2000/svg"><path d="M17 1C8.2 1 1 8.1 1 16.9 1 28 17 43 17 43S33 28 33 16.9C33 8.1 25.8 1 17 1z" fill="${col}" stroke="#fff" stroke-width="2"/></svg>`;
-  const lbl=visited?'✓':'';
-  return L.divIcon({className:'',html:`<div class="pin">${svg}<div class="lbl">${lbl}</div></div>`,iconSize:[34,44],iconAnchor:[17,43],popupAnchor:[0,-40]});
+function pinIcon(p){
+  return L.divIcon({className:'',html:`<div class="mk ${p.visited?'done':'todo'}"><div class="tail"></div><div class="disc">${glyph(p)}</div></div>`,iconSize:[40,48],iconAnchor:[20,47],popupAnchor:[0,-44]});
 }
 function render(){
   layer.clearLayers();markers={};
   places.forEach(p=>{
     if(filter==='todo'&&p.visited)return; if(filter==='done'&&!p.visited)return;
-    const m=L.marker([p.lat,p.lng],{icon:pinIcon(p.visited),title:p.name}).addTo(layer);
+    const m=L.marker([p.lat,p.lng],{icon:pinIcon(p),title:p.name}).addTo(layer);
     m.on('click',()=>openCard(p.id)); markers[p.id]=m;
   });
   $('hint').style.display=places.length?'none':'block';
+  paintDrawer();
 }
-render();
 
 /* ---------- sheets ---------- */
 let openSheet=null;
@@ -350,9 +416,11 @@ function stars(n){let s='';for(let i=1;i<=5;i++)s+=`<span class="${i<=n?'':'off'
 function openCard(id){
   const p=places.find(x=>x.id===id);if(!p)return;current=p;
   $('cName').textContent=p.name;$('cStars').innerHTML=stars(p.rating||0);
+  $('cIcon').innerHTML=`<span class="ring ${p.visited?'done':'todo'}">${glyph(p)}</span>`;
+  $('cPet').textContent=p.pet==='yes'?'🐾 Pet friendly':p.pet==='no'?'🚫 No pets':'';
   $('cNote').textContent=p.notes?`“${p.notes}”`:'';$('cNote').style.display=p.notes?'block':'none';
   $('cStatus').textContent=p.visited?'✓ Visited':'○ To visit';$('cStatus').className='status '+(p.visited?'v':'t');
-  $('cMeta').textContent=(p.visited&&p.visitedDate?`Visited ${fmtDate(p.visitedDate)} · `:'')+(p.source?`From ${p.source}`:'Added manually');
+  $('cMeta').textContent=[(p.type&&p.type!=='pin'&&TYPES[p.type])?TYPES[p.type].l:null,(p.visited&&p.visitedDate)?`Visited ${fmtDate(p.visitedDate)}`:null,p.source?`From ${p.source}`:'Added manually'].filter(Boolean).join(' · ');
   $('cToggle').textContent=p.visited?'↺ Mark as to visit':'✓ Mark visited';$('cToggle').className='btn '+(p.visited?'':'good');
   $('cGoogle').href=`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
   $('cApple').href=`https://maps.apple.com/?daddr=${p.lat},${p.lng}&q=${encodeURIComponent(p.name)}`;
@@ -360,16 +428,22 @@ function openCard(id){
   show('cardSheet');map.panTo([p.lat,p.lng]);
 }
 function fmtDate(d){try{return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}catch(e){return d}}
-$('cToggle').onclick=()=>{if(!current)return;current.visited=!current.visited;current.visitedDate=current.visited?new Date().toISOString().slice(0,10):null;save();render();openCard(current.id);
+$('cToggle').onclick=()=>{if(!current)return;current.visited=!current.visited;current.visitedDate=current.visited?new Date().toISOString().slice(0,10):null;saveDirty();render();openCard(current.id);
   toast(current.visited?'Marked visited. Remember to remove its Reminder if you set one.':'Marked as to visit')};
-$('cDelete').onclick=()=>{if(!current)return;if(!confirm(`Delete “${current.name}”?`))return;places=places.filter(x=>x.id!==current.id);save();render();hide()};
+$('cDelete').onclick=()=>{if(!current)return;if(!confirm(`Delete “${current.name}”?`))return;places=places.filter(x=>x.id!==current.id);saveDirty();render();hide()};
 $('cEdit').onclick=()=>openEdit(current);
 $('cReminder').onclick=()=>{if(!current)return;runShortcut('Trip Pins Reminders',reminderLine(current,settings.planRadius))};
 
 /* ---------- edit ---------- */
-let editing=null, editRating=0;
+let editing=null, editRating=0, editType='pin', editPet='';
+$('eType').innerHTML=Object.entries(TYPES).map(([k,v])=>`<button type="button" data-v="${k}"><span>${v.e||PIN_SVG}</span>${v.l}</button>`).join('');
+function paintType(){[...$('eType').children].forEach(b=>b.classList.toggle('on',b.dataset.v===editType))}
+function paintPet(){[...$('ePet').children].forEach(b=>b.classList.toggle('on',b.dataset.v===editPet))}
+$('eType').onclick=e=>{const b=e.target.closest('button');if(!b)return;editType=b.dataset.v;paintType()};
+$('ePet').onclick=e=>{const b=e.target.closest('button');if(!b)return;editPet=b.dataset.v;paintPet()};
 function openEdit(p,latlng){
-  editing=p||null;editRating=p?(p.rating||0):0;
+  editing=p||null;editRating=p?(p.rating||0):0;editType=p?(p.type||'pin'):'pin';editPet=p?(p.pet||''):'';paintType();paintPet();
+  $('eNoDate').checked=!!(p&&p.visited&&!p.visitedDate);
   $('eTitle').textContent=p?'Edit place':'New place';
   $('eName').value=p?p.name:(latlng&&latlng.name)||'';$('eNote').value=p?p.notes||'':'';
   $('eVisited').checked=p?!!p.visited:false;$('eDate').value=p&&p.visitedDate?p.visitedDate:'';
@@ -378,16 +452,17 @@ function openEdit(p,latlng){
 }
 function paintStars(){[...$('eStars').children].forEach(s=>s.classList.toggle('on',+s.dataset.v<=editRating))}
 $('eStars').onclick=e=>{const s=e.target.closest('span');if(!s)return;const v=+s.dataset.v;editRating=(editRating===v)?0:v;paintStars()};
-function toggleDate(){$('eDateWrap').style.display=$('eVisited').checked?'block':'none';if($('eVisited').checked&&!$('eDate').value)$('eDate').value=new Date().toISOString().slice(0,10)}
-$('eVisited').onchange=toggleDate;
+function toggleDate(){const v=$('eVisited').checked;$('eDateWrap').style.display=v?'block':'none';$('eDateLbl').style.display=$('eNoDate').checked?'none':'block';if(v&&!$('eNoDate').checked&&!$('eDate').value)$('eDate').value=new Date().toISOString().slice(0,10)}
+$('eVisited').onchange=toggleDate;$('eNoDate').onchange=toggleDate;
 $('eCancel').onclick=()=>{if(editing)openCard(editing.id);else hide()};
 $('eSave').onclick=()=>{
   const name=$('eName').value.trim();if(!name){toast('Give the place a name');return}
   const lat=parseFloat($('eLat').value),lng=parseFloat($('eLng').value);if(isNaN(lat)||isNaN(lng)){toast('Invalid coordinates');return}
-  const v=$('eVisited').checked;
-  if(editing){Object.assign(editing,{name,lat,lng,notes:$('eNote').value.trim(),rating:editRating,visited:v,visitedDate:v?($('eDate').value||new Date().toISOString().slice(0,10)):null})}
-  else{editing={id:uid(),name,lat,lng,notes:$('eNote').value.trim(),rating:editRating,visited:v,visitedDate:v?($('eDate').value||null):null,createdAt:new Date().toISOString(),source:''};places.push(editing)}
-  save();render();openCard(editing.id);
+  const v=$('eVisited').checked;const vd=v?($('eNoDate').checked?null:($('eDate').value||null)):null;
+  const common={name,lat,lng,notes:$('eNote').value.trim(),rating:editRating,visited:v,visitedDate:vd,type:editType,pet:editPet||null};
+  if(editing){Object.assign(editing,common)}
+  else{editing=Object.assign({id:uid(),createdAt:new Date().toISOString(),source:''},common);places.push(editing)}
+  saveDirty();render();openCard(editing.id);
 };
 map.on('contextmenu',e=>{openEdit(null,e.latlng)});
 $('addBtn').onclick=()=>openEdit(null,map.getCenter());
@@ -445,6 +520,8 @@ const fmtKm=m=>m>=1000?(m/1000).toFixed(m%1000?2:0).replace(/\.?0+$/,'')+' km':m
 function openSettings(){
   $('sWatch').checked=settings.watch;$('sRadius').value=settings.radius;$('sRadiusOut').textContent=fmtKm(settings.radius);
   $('sEta').checked=settings.eta;$('sSound').checked=settings.sound;$('sNotify').checked=settings.notify&&('Notification'in window)&&Notification.permission==='granted';
+  $('sTypes').checked=settings.typeIcons!==false;$('sBackupEvery').value=settings.backupEvery;$('sBackupEveryOut').textContent=settings.backupEvery;
+  $('sBackupInfo').textContent=(settings.lastBackup?`Last backup ${fmtDate(settings.lastBackup)}`:'Never backed up')+` · ${settings.changes||0} change${settings.changes===1?'':'s'} since`;
   const v=places.filter(p=>p.visited).length;$('sStats').textContent=`${places.length} places · ${v} visited · ${places.length-v} to visit · stored on this device`;
   show('settingsSheet');
 }
@@ -453,6 +530,9 @@ $('sRadius').oninput=()=>{settings.radius=+$('sRadius').value;$('sRadiusOut').te
 $('sEta').onchange=()=>{settings.eta=$('sEta').checked;saveSettings()};
 $('sSound').onchange=()=>{settings.sound=$('sSound').checked;saveSettings()};
 $('sNotify').onchange=async()=>{if($('sNotify').checked){if(!('Notification'in window)){toast('Notifications need the app installed to the Home Screen');$('sNotify').checked=false;return}const r=await Notification.requestPermission();settings.notify=r==='granted';$('sNotify').checked=settings.notify;if(!settings.notify)toast('Permission not granted')}else settings.notify=false;saveSettings()};
+$('sTypes').onchange=()=>{settings.typeIcons=$('sTypes').checked;saveSettings();render()};
+$('sBackupEvery').oninput=()=>{settings.backupEvery=+$('sBackupEvery').value;$('sBackupEveryOut').textContent=settings.backupEvery;saveSettings()};
+$('sBackupNow').onclick=()=>{doBackup();openSettings()};
 $('sWipe').onclick=()=>{if(confirm('Delete ALL places from this phone? Export a backup first!')&&confirm('Really delete everything?')){places=[];save();render();hide();toast('All places deleted')}};
 if(settings.watch)startWatch();
 
@@ -472,9 +552,11 @@ function download(name,text,type){const blob=new Blob([text],{type});const a=doc
 const stamp=()=>new Date().toISOString().slice(0,10);
 function backupJson(){return JSON.stringify({app:'Trip Pins',version:1,exported:new Date().toISOString(),places},null,1)}
 function csvOut(){const q=s=>`"${String(s??'').replace(/"/g,'""')}"`;return ['Name,Latitude,Longitude,Rating,Visited,Date visited,Notes,Source'].concat(places.map(p=>[q(p.name),p.lat,p.lng,p.rating||'',p.visited?'yes':'no',p.visitedDate||'',q(p.notes),q(p.source)].join(','))).join('\r\n')}
-$('expJson').onclick=()=>download(`trip-pins-backup-${stamp()}.json`,backupJson(),'application/json');
+function markBackedUp(){settings.lastBackup=new Date().toISOString();settings.changes=0;settings.snoozeUntil=0;saveSettings()}
+function doBackup(){download(`trip-pins-backup-${stamp()}.json`,backupJson(),'application/json');markBackedUp();toast('Backup saved to your Downloads / Files')}
+$('expJson').onclick=doBackup;
 $('expCsv').onclick=()=>download(`trip-pins-${stamp()}.csv`,csvOut(),'text/csv');
-$('expShare').onclick=async()=>{try{const f=new File([backupJson()],`trip-pins-backup-${stamp()}.json`,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f],title:'Trip Pins backup'});else toast('Sharing files not supported here — use Save backup')}catch(e){}};
+$('expShare').onclick=async()=>{try{const f=new File([backupJson()],`trip-pins-backup-${stamp()}.json`,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'Trip Pins backup'});markBackedUp()}else toast('Sharing files not supported here — use Save backup')}catch(e){}};
 
 /* ---------- import ---------- */
 function parseCSV(text){
@@ -542,13 +624,49 @@ $('impRun').onclick=async()=>{
     if(isDup(c)){dups++;return}
     const det=detect(c.notes);
     places.push({id:c.id||uid(),name:c.name,lat:+c.lat,lng:+c.lng,notes:c.notes||'',rating:c.rating!=null?c.rating:det.rating,visited:c.visited!=null?!!c.visited:det.visited,visitedDate:c.visitedDate||(det.visited?null:null),createdAt:c.createdAt||new Date().toISOString(),source:c.source||'',url:c.url||'',geocoded:!!c.geocoded});added++});
-  save();render();
+  save();settings.changes=(settings.changes||0)+added;saveSettings();render();
   $('impProgress').style.display='none';$('impRun').disabled=false;
   const geo=cand.filter(c=>c.geocoded).length;
   $('impResult').innerHTML=`<div class="ok">Imported <b>${added}</b> place${added===1?'':'s'}${dups?` · skipped ${dups} duplicate${dups===1?'':'s'}`:''}${geo?` · ${geo} located by name (double‑check these)`:''}.</div>`+
     (unresolved.length?`<div class="warn"><b>${unresolved.length} couldn't be located</b> and were skipped. Add them by search:<br>${unresolved.slice(0,30).map(esc).join(', ')}${unresolved.length>30?'…':''}</div>`:'');
   if(added){const b=L.latLngBounds(places.map(p=>[p.lat,p.lng]));map.fitBounds(b.pad(0.1))}
 };
+
+/* ---------- backup nudge ---------- */
+function checkNudge(){
+  if(openSheet)return; if(!places.length)return; if(Date.now()<(settings.snoozeUntil||0))return;
+  const days=settings.lastBackup?(Date.now()-new Date(settings.lastBackup))/864e5:null;
+  const byCount=(settings.changes||0)>=settings.backupEvery, byAge=days!=null&&days>=30&&(settings.changes||0)>0;
+  if(!byCount&&!byAge)return;
+  $('bkText').textContent=byCount?`You've made ${settings.changes} changes since your last backup${settings.lastBackup?` on ${fmtDate(settings.lastBackup)}`:''}.`:`It's been ${Math.floor(days)} days since your last backup.`;
+  show('backupSheet');
+}
+$('bkNow').onclick=()=>{doBackup();hide()};
+$('bkLater').onclick=()=>{settings.snoozeUntil=Date.now()+3*864e5;saveSettings();hide();toast("OK — I'll ask again in 3 days")};
+setTimeout(checkNudge,2500);
+
+/* ---------- bottom drawer ---------- */
+let dSel=null;
+function setDrawer(open){settings.drawerOpen=open;saveSettings();document.body.classList.toggle('dopen',open)}
+$('dHandle').onclick=()=>setDrawer(!settings.drawerOpen);
+let ty0=null;$('dHandle').addEventListener('touchstart',e=>{ty0=e.touches[0].clientY},{passive:true});
+$('dHandle').addEventListener('touchend',e=>{if(ty0==null)return;const dy=e.changedTouches[0].clientY-ty0;ty0=null;if(dy<-30)setDrawer(true);else if(dy>30)setDrawer(false)});
+$('dSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;settings.drawerFilter=b.dataset.f;saveSettings();paintDrawer()});
+function paintDrawer(){
+  [...$('dSeg').children].forEach(b=>b.classList.toggle('on',b.dataset.f===(settings.drawerFilter||'all')));
+  const f=settings.drawerFilter||'all';
+  const arr=places.filter(p=>f==='all'||(f==='done'?p.visited:!p.visited)).sort((a,b)=>a.name.localeCompare(b.name));
+  const v=places.filter(p=>p.visited).length;
+  $('dTitle').textContent=`Places · ${arr.length}${f==='all'?` (${v} visited, ${places.length-v} to visit)`:''}`;
+  const body=$('dList');body.innerHTML='';
+  if(!arr.length){body.innerHTML='<div class="it"><span class="meta">Nothing here yet — long‑press the map or search to add a place.</span></div>';return}
+  arr.forEach(p=>{const d=document.createElement('div');d.className='it'+(p.id===dSel?' sel':'');
+    d.innerHTML=`<span class="ring ${p.visited?'done':'todo'}">${glyph(p)}</span><span class="nm"><b>${esc(p.name)}</b><small>${p.rating?'★'.repeat(p.rating)+' · ':''}${p.visited?'Visited':'To visit'}${p.pet==='yes'?' · 🐾':p.pet==='no'?' · 🚫':''}</small></span><span class="go">›</span>`;
+    d.onclick=()=>{dSel=p.id;map.flyTo([p.lat,p.lng],Math.max(map.getZoom(),14),{duration:.6});[...body.children].forEach(x=>x.classList.remove('sel'));d.classList.add('sel')};
+    body.appendChild(d)});
+}
+document.body.classList.toggle('dopen',!!settings.drawerOpen);
+render();
 
 /* ---------- plan alerts ---------- */
 let planCentre=null;

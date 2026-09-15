@@ -1,4 +1,4 @@
-# Trip Pins — setup guide
+# Trip Pins — setup guide (v2)
 
 A free iPhone web app for your map of places to visit / visited, with ratings, notes,
 Google Maps import and nearby alerts. No Apple developer account, no API keys.
@@ -51,13 +51,25 @@ Notes:
 - Re‑importing the same files is safe — duplicates are skipped.
 
 ## 4. Using the app
-- **Red pin** = to visit. **Green pin ✓** = visited.
+- Every place is a white disc in a coloured ring: **red ring** = to visit, **green ring** = visited.
+- **Type**: choose Generic pin (default), Castle, Beach, Food, Nature/view, Museum/historic,
+  Pub/bar or Stay when editing — the icon in the ring changes to match.
+  Settings → *Show location‑type icons* turns this off for plain pins everywhere.
+- **Pet friendly**: Unknown / Yes / No per place; shown on the card as 🐾 or 🚫.
+- **Visited date**: tick *I don't remember the date* to mark visited with no date.
 - **Long‑press** the map, or use the **search box**, or tap **＋**, to add a place.
-- **Tap a pin** for the card: name, ⭐ rating, your note, ✓ Visited / ○ To visit,
+- **Tap a pin** for the card: name, ⭐ rating, your note, ✓ Visited / ○ To visit, pet friendly,
   plus Edit, Mark visited, Open in Google Maps / Apple Maps, Arrival reminder, Delete.
-- **All / To visit / Visited** filter at the top.
+- **All / To visit / Visited** filter at the top controls which pins are on the map.
+- **Places bar** at the bottom: tap or swipe up for a scrollable list over the bottom half of
+  the screen, with its own All / To visit / Visited filter. Tap a row and the map flies to it;
+  tap the pin for its card. Tap or swipe the bar down to collapse it for a full‑screen map.
 - **⋯ → All places** — searchable list.
 - **⋯ → Export / back up** — data lives only on your phone; back up regularly.
+- **Backup reminders**: after 10 changes (adjustable in Settings) or 30 days since the last
+  backup, the app asks you to back up, with a one‑tap **Back up now** button. *Later* snoozes it
+  for 3 days. Updating the app never deletes your places — only removing the app icon,
+  clearing Safari data, or changing the web address does.
 
 ## 5. Alerts while the app is open
 **⋯ → Settings** → turn on *Watch my location*. While the app is on screen (e.g. mounted
