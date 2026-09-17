@@ -1,6 +1,6 @@
 /* Trip Pins service worker v2: offline app shell + cached map tiles.
    App files are network-first (so updates arrive automatically); tiles are cache-first. */
-const VERSION = 'v3';
+const VERSION = 'v3.1';
 const SHELL = 'tripins-shell-' + VERSION;
 const TILES = 'tripins-tiles-v1';
 const SHELL_FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png',

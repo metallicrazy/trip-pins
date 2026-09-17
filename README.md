@@ -1,4 +1,4 @@
-# Trip Pins — setup guide (v2)
+# Trip Pins — setup guide (v3.1)
 
 A free iPhone web app for your map of places to visit / visited, with ratings, notes,
 Google Maps import and nearby alerts. No Apple developer account, no API keys.
@@ -58,12 +58,21 @@ Notes:
 - **Pet friendly**: Unknown / Yes / No per place; shown on the card as 🐾 or 🚫.
 - **Visited date**: tick *I don't remember the date* to mark visited with no date.
 - **Long‑press** the map, or use the **search box**, or tap **＋**, to add a place.
+- The **search box** also accepts anything copied from Google Maps: decimal coordinates
+  (`56.9459, -2.1968`), degrees/minutes/seconds, full plus codes (`9C9M8WQ2+2X`), short plus
+  codes with a town (`8WQ2+2X Stonehaven`), and pasted Google Maps links. Tap the result to add a
+  place there.
 - **Tap a pin** for the card: name, ⭐ rating, your note, ✓ Visited / ○ To visit, pet friendly,
   plus Edit, Mark visited, Open in Google Maps / Apple Maps, Arrival reminder, Delete.
 - **All / To visit / Visited** filter at the top controls which pins are on the map.
 - **Places bar** at the bottom: tap or swipe up for a scrollable list over the bottom half of
   the screen, with its own All / To visit / Visited filter. Tap a row and the map flies to it;
   tap the pin for its card. Tap or swipe the bar down to collapse it for a full‑screen map.
+  - **A‑Z / 📍** toggles between alphabetical and nearest‑first (distance shown on each row).
+  - **🔍** swaps the filter row for a search box (name, note or type); **‹** goes back.
+- **Clusters**: zoomed out, nearby pins merge into a white circle with a blue outline and the
+  count inside. Tap it to zoom in and split it apart.
+- **CSV export** includes Type and Pet friendly columns; the JSON backup includes everything.
 - **⋯ → All places** — searchable list.
 - **⋯ → Export / back up** — data lives only on your phone; back up regularly.
 - **Backup reminders**: after 10 changes (adjustable in Settings) or 30 days since the last
